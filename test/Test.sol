@@ -14,7 +14,7 @@ contract TestStudentCreation {
 
         studentCreated.createStudent(expected);
 
-        assert(studentCreated.getStudentInfo(expected) == expected);
+        assert.equal(studentCreated.getStudentInfo(expected), expected, "The created student should be equal here.");
 
 }
 
