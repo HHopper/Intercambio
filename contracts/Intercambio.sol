@@ -167,6 +167,7 @@ function scheduleLesson(address tutor) public payable returns(bytes32, uint) {
         lessonAddressesArray.push(lessonAddress);
         return (lessonAddress, timeScheduled); /// tells us that lines 30 to 35 worked and tells us that 
         }
+    lessonAddressesArray.push(lessonAddress); ///adds the lesson to the lesson array for storage and later reference.
     emit lessonScheduled(tutor, msg.sender, lessonAddress);    
 } 
 
