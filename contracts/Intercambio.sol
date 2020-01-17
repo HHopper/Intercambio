@@ -1,17 +1,21 @@
     pragma solidity ^0.5.0;
 
-    ///the purpose of this contract is to create a market, manage accounts, and to handle the lesson logic between students and tutors
+    /// @title A decentralized language exchange application
+    /// @author Huckleberry J. Hopper
+    /// @notice Handles tutor and student accounts, stakes funds, and confirms lesson logic for fund transfer
+    /// @dev All functions calls are handled locally and this is not production ready
+
     contract Intercambio {
 
     bool marketexists; ///tells us if the market exists 
     address mktOwner; ///state var that tells us who owns the marketplace
-    address mktAddress; ///market address
-    uint mktcreationcount;
-    bool public contractPaused = false;
+    address mktAddress; ///tells us who owns the market 
+    uint mktcreationcount; ///keeps track of how many time this contract instance is called
+    bool public contractPaused = false; ///the bool state var for the circuit breaker
 
     mapping (address => Seller) sellers; ///mapping used to access the struct Seler
     mapping (address => Buyer) buyers; ///mapping used to access the struct Buyer
-    mapping (bytes32 => lessonStruct) lessonmapping; ///
+    mapping (bytes32 => lessonStruct) lessonmapping; ///mapping used to access the struct lessonStruct
 
     address[] sellersAddressesArray; ///stores the addresses of the teachers for reference in the mapping
     address[] buyerAddressesArray;///stores the addresses of the students for reference in the mapping
@@ -88,7 +92,8 @@
         }
     }
 
-    ///constructor that sets the market information
+    ///@notice constructor that sets the market information
+    ///@dev assigns a market owner who has the ability to flip the circuit breaker 
     constructor () public onlyOnce() {
         marketexists = true; 
         mktAddress = msg.sender;
@@ -97,13 +102,15 @@
     } 
 
 
-    ///allows us to pause the market functionality
+    /// @notice  flips a state var that pauses all value transfer functions
+    /// @dev used as a defense against malicious users for in the instance that the contract is compromised
     function circuitPauseAllFundMovement() public onlyOwner() { // onlyOwner can call
         if (contractPaused == false) { contractPaused = true; }
         else { contractPaused = false; }
     }
 
-    ///creates a tutor with a series of attributes
+    ///@notice creates a tutor with a series of attributes
+    ///@dev the unit conversions for setRate are in wei by default 
     function createTutor(uint setRate) payable public {
         ///checks to see if there is already a tutor at this address
         require(setRate <= 10000000000, "Stop trying to overflow the contract ya jerk."); ///stops integer overflow for users
@@ -117,7 +124,8 @@
         emit tutorAccountCreated(msg.sender, setRate, msg.value); /// emits tutor creatio,n event
     }
 
-    ///creates a language learner with a series of attributes
+    ///@notice creates a language learner with a series of attributes
+    ///@dev notice the bool value line 135 - this is used for reference when scheduling lesson
     function createStudent() payable public returns (address) {
         require(buyers[msg.sender].started != true, "There is already a student at this address."); ///checks to see if there is already a student at this address
         Intercambio.Buyer storage student = buyers[msg.sender]; ///creates and instance of student and assigned _address to mapping
@@ -129,14 +137,16 @@
 
     }
 
-    /// funds a student account given that the account exists
-    function fundStudentAccount () public payable returns (bool) {
+    /// @notice funds a student account given that the account exists
+    /// @dev default storage value is in wei. Users can deposit any value conversion they wish
+    function fundStudentAccount () public payable checkIfPaused() returns (bool) {
         require(buyers[msg.sender].started == true && buyers[msg.sender].buyerAddress == msg.sender); ///requires the person calling the function to already have a student address and it exists
         buyers[msg.sender].buyerFunds += msg.value; ///assigns the value sent along with the transaction to be stored in this contract
         return true;
         emit studentAccountFunded(msg.sender, msg.value); ///tells front end account has been funded
     }
-    ///allows the students to withdraw their funds 
+    ///@notice allows the students to withdraw their funds 
+    ///@dev withdrawl amount is, by default, wei
     function studentWithdrawTotalFunds(uint Amount) public {
         require(msg.sender == buyers[msg.sender].buyerAddress && buyers[msg.sender].buyerFunds >= Amount);
         buyers[msg.sender].buyerFunds -= Amount;
@@ -144,7 +154,8 @@
         emit studentFundsWithdrawn(msg.sender, Amount);
         }
 
-    ///allows the tutor to withdraw their funds
+    ///@notice allows the tutor to withdraw their funds    
+    ///@dev all amounts are, by defaul, wei
     function tutorWithdrawFunds(uint Amount) public {
         require(msg.sender == sellers[msg.sender].sellerAddress && sellers[msg.sender].sellerFunds >= Amount);
         sellers[msg.sender].sellerFunds -= Amount;
@@ -152,7 +163,8 @@
         emit tutorFundsWithdrawn(msg.sender, Amount);
     }
 
-    ///this function schedules a lesson and then it also stakes funds
+    ///@notice this function schedules a lesson and then it also stakes fundstr
+    ///@dev notice the the keccak function to create a unique lesson ID. This can be improved.
     function scheduleLesson(address tutor) public payable returns(bytes32, uint) { 
         require((buyers[msg.sender].started == true && tutor != msg.sender && sellers[tutor].sellerFunds > sellers[tutor].hourlyRate), "It seems that either you don't have an account, you ACTUALLY ARE THE TUTOR - SAVEY?, or your tutor doesn't have the required stake amount."); ///require the tutor and student both exist and they aren't the same
         sellers[tutor].lessonCount += 1; ///adds a lesson count to the seller's struct for hash
@@ -175,7 +187,7 @@
         emit lessonScheduled(tutor, msg.sender, lessonAddress);    
     } 
 
-    ///this function takes the students funds out of their account, as well as the tutors, as a promise that it'll happen
+    ///@notice this function takes the students funds out of their account, as well as the tutors, as a promise that it'll happen
     function stakeFunds(address tutorAddress, bytes32 lessonaddress) private returns(bool) { 
         uint stake  = sellers[tutorAddress].hourlyRate; ///stake amount is the hourlyRate set by the tutor
         buyers[msg.sender].buyerFunds -= stake; ///pulls stake amount from buyer and buyer stakes 100% of stake amount
@@ -187,7 +199,7 @@
 
 
 
-    ///this function allows tutors to confirm the lesson 
+    ///@notice this function allows tutors to confirm the lesson 
     function tutorConfirmLesson (bytes32 lessonAddress) public returns (bool) { 
         require(lessonmapping[lessonAddress].tutor == msg.sender, "You are not the tutor."); ///requires the tutor confirming to be the tutor
         lessonmapping[lessonAddress].tutorconfirmed = true; /// changes the state variable to true;
@@ -201,7 +213,7 @@
             emit lessonLogConfirmed(msg.sender, lessonmapping[lessonAddress].student, lessonAddress);
         }
     }
-    ///this function allows students to confirm the lesson
+    ///@notice this function allows students to confirm the lesson
     function studentConfirmLesson (bytes32 lessonAddress) public returns (bool) { 
         require(lessonmapping[lessonAddress].student == msg.sender, "You are not the student of this lesson.");     ///requires the student confirming to be the student
         lessonmapping[lessonAddress].studentconfirmed = true;
@@ -213,7 +225,8 @@
             return true;
         }
     }
-    ///confirms that the lesson has been confirmed prior to transfer
+
+    ///@notice confirms that the lesson has been confirmed prior to transfer
     function lessonConfirmed (bytes32 lessonAddress) internal {
         //if it is more than a month after the scheduled lesson time, confirm it as true, if not, require both tutor and student to confirm
         if(now > lessonmapping[lessonAddress].time + 2700000) { /// if now is greater than the schedule time + 30 days (in seconds) autoconfirm the lesson happened
@@ -228,7 +241,8 @@
         }
     }
 
-    ///tranfers funds between students and tutors after the lesson
+    ///@notice tranfers funds between students and tutors after the lesson
+    ///@return returns bool to confirm that the transfer has occurred
     function transferFunds(bytes32 lesson) public payable checkIfPaused() returns (bool) {
         require(lessonmapping[lesson].lessonConfirmed == true, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
         require((lessonmapping[lesson].student == msg.sender || lessonmapping[lesson].tutor == msg.sender), "It looks like you're neither the student or teacher."); ///requires the person calling is the student or tutor
@@ -242,40 +256,50 @@
         emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
     }  
 
-    ///see the info about the lesson
+    ///@notice see the info about the lesson
+    ///@return the addresses of all of the lessons in total
     function getLessonInfo (bytes32 lessonAddress) public view returns (address, address, bytes32, uint, uint, bool) {
         return (lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress, lessonmapping[lessonAddress].studentstake, lessonmapping[lessonAddress].tutorstake, lessonmapping[lessonAddress].lessonConfirmed); 
     }
 
-    ///allows us to pull the teacher's information from the blockchain
+    ///@notice allows us to pull the teacher's information from the blockchain
+    ///@return returns the tutor's total funds and hourly rate
     function getTutorInfo (address _address) public view returns (uint, uint) {
         return (sellers[_address].sellerFunds, sellers[_address].hourlyRate);
     }
 
-    ///allows us to pull the students info from the blockchain
+    ///@notice allows us to pull the students info from the blockchain
+    ///@return the student's address and total funds
     function getStudentInfo (address _address) public view returns (address, uint) {
         return (buyers[_address].buyerAddress, buyers[_address].buyerFunds);
     }
 
-    ///see the adddresses of all the tutors
+    ///@notice see the adddresses of all the tutors
+    ///@return a list of the tutor's total adddresses
     function getAllTutors () public view returns (address[] memory ) {
         return sellersAddressesArray;
     }
 
-    ///see the address of all the students
+    ///@notice see the address of all the students
+    ///@return a list of the all the tutor addresses
     function getAllStudents () public view returns (address[] memory ) {
         return buyerAddressesArray;
     }
 
+    ///@notice gets all the lessons
+    ///@return 
     function getAllLessons () public view returns (bytes32[] memory ) {
         return lessonAddressesArray;
     }
 
-    ///see info of the jefe that ownes the market
+    ///@notice see info of the user that ownes the market
+    ///@return the market exists bool, who the owner is, what address, and how many times it has been counted
     function getMktOwner () public view returns (bool, address, address, uint) {
         return (marketexists, mktOwner, mktAddress, mktcreationcount);
     }
 
+    ///@notice tells us the status of the circuit breaker
+     ///@return the bool that tells us if the contract is paused
     function getCircuitBreakerInfo() public view returns (bool) {
         return contractPaused;
     }
