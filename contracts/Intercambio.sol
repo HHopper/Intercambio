@@ -2,7 +2,7 @@
 
     /// @title A decentralized language exchange application
     /// @author Huckleberry J. Hopper
-    /// @notice Handles tutor and student accounts, stakes funds, and confirms lesson logic for fund transfer
+    /// @notice Creates and handles tutor and student accounts/funds, stakes funds, and confirms lesson logic for fund transfer
     /// @dev All functions calls are handled locally and this is not production ready
 
     contract Intercambio {
@@ -20,6 +20,8 @@
     address[] sellersAddressesArray; ///stores the addresses of the teachers for reference in the mapping
     address[] buyerAddressesArray;///stores the addresses of the students for reference in the mapping
     bytes32[] lessonAddressesArray; ///stores the addresses of the lessons
+
+    enum Status { Scheduled, Closed }
 
 
     /// @notice a tutor with a series of attributes
@@ -49,7 +51,7 @@
         bool scheduled; ///confirmed scheduled
         bool studentconfirmed; ///student confirms lesson
         bool tutorconfirmed; ///teacher  confirms lesson
-        bool lessonConfirmed; ///lesson is confirmed
+        Status lessonStatus; ///lesson is confirmed
         uint time;
     }
 
@@ -83,6 +85,12 @@
         _;
     }
 
+    /// @notice used to prevent integer overflow where users can input
+    modifier stopIntOverflow(uint input) {
+        require(input < 10000000000000 && input > 0); 
+        _;
+    }
+
     /// @notice ensures that the market for students and teachers can only be created one time
     modifier onlyOnce() {
         if (mktcreationcount >= 1) {
@@ -111,9 +119,7 @@
 
     /// @notice creates a tutor with a series of attributes
     /// @dev the unit conversions for setRate are in wei by default 
-    function createTutor(uint setRate) payable public {
-        ///checks to see if there is already a tutor at this address
-        require(setRate <= 10000000000, "Stop trying to overflow the contract ya jerk."); ///stops integer overflow for users
+    function createTutor(uint setRate) payable public stopIntOverflow(setRate) {
         require(sellers[msg.sender].existance != true, "There is already a tutor at this address."); /// makes sure the person doesn't already have an account
         Intercambio.Seller storage tutor = sellers[msg.sender]; 
         tutor.sellerAddress = msg.sender;
@@ -147,7 +153,7 @@
     }
     /// @notice allows the students to withdraw their funds 
     /// @dev withdrawl amount is, by default, wei
-    function studentWithdrawTotalFunds(uint Amount) public {
+    function studentWithdrawTotalFunds(uint Amount) public stopIntOverflow(Amount) {
         require(msg.sender == buyers[msg.sender].buyerAddress && buyers[msg.sender].buyerFunds >= Amount);
         buyers[msg.sender].buyerFunds -= Amount;
         msg.sender.transfer(Amount);
@@ -156,7 +162,7 @@
 
     /// @notice allows the tutor to withdraw their funds    
     /// @dev all amounts are, by defaul, wei
-    function tutorWithdrawFunds(uint Amount) public {
+    function tutorWithdrawFunds(uint Amount) public stopIntOverflow(Amount) {
         require(msg.sender == sellers[msg.sender].sellerAddress && sellers[msg.sender].sellerFunds >= Amount);
         sellers[msg.sender].sellerFunds -= Amount;
         msg.sender.transfer(Amount);
@@ -173,7 +179,8 @@
         lessonmapping[lessonAddress].student = msg.sender; ///sets the student of the lesson to the student's address 
         lessonmapping[lessonAddress].rate = sellers[tutor].hourlyRate; ///changes the lesson struct to reference the hourly rate for later transfer -- NEED TO WORK ON THIS
         uint timeScheduled = now;
-        lessonmapping[lessonAddress].time = timeScheduled;
+        lessonmapping[lessonAddress].lessonStatus = Status.Scheduled;
+         lessonmapping[lessonAddress].time = timeScheduled;
         if(sellers[tutor].sellerFunds < sellers[tutor].hourlyRate) { 
             lessonAddressesArray.push(lessonAddress);
             return (lessonAddress, timeScheduled); 
@@ -200,9 +207,10 @@
 
 
     /// @notice this function allows tutors to confirm the lesson 
+    /// @dev this, and the tutor conifirmation, are the two functions used to enable transferFunds()
     function tutorConfirmLesson (bytes32 lessonAddress) public returns (bool) { 
         require(lessonmapping[lessonAddress].tutor == msg.sender, "You are not the tutor."); ///requires the tutor confirming to be the tutor
-        lessonmapping[lessonAddress].tutorconfirmed = true; /// changes the state variable to true;
+        lessonmapping[lessonAddress].tutorconfirmed = true; /// changes the state variable to true
         ///if the tutor has also confirmed it, call lessonConfirmed
         if (lessonmapping[lessonAddress].studentconfirmed == true) {
             lessonConfirmed(lessonAddress);
@@ -218,7 +226,6 @@
         require(lessonmapping[lessonAddress].student == msg.sender, "You are not the student of this lesson.");     ///requires the student confirming to be the student
         lessonmapping[lessonAddress].studentconfirmed = true;
         emit studentConfirmedLesson(msg.sender); ///lets the front end know the student has confirmed the lesson
-        ///if the tutor has also confirmed it, call lessonConfirmed
         if (lessonmapping[lessonAddress].tutorconfirmed == true) {
             lessonConfirmed(lessonAddress);
         } else {
@@ -228,14 +235,15 @@
 
     /// @notice confirms that the lesson has been confirmed prior to transfer
     function lessonConfirmed (bytes32 lessonAddress) internal {
+        require(lessonmapping[lessonAddress].lessonStatus != Status.Closed); 
         //if it is more than a month after the scheduled lesson time, confirm it as true, if not, require both tutor and student to confirm
         if(now > lessonmapping[lessonAddress].time + 2700000) { /// if now is greater than the schedule time + 30 days (in seconds) autoconfirm the lesson happened
-            lessonmapping[lessonAddress].lessonConfirmed = true;
+            lessonmapping[lessonAddress].lessonStatus = Status.Closed;
             emit lessonLogConfirmed(lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress);
             transferFunds(lessonAddress); ///autotransfers the funds to the tutor's account
         } else {
         require (lessonmapping[lessonAddress].studentconfirmed == true && lessonmapping[lessonAddress].tutorconfirmed == true); ///requires both student and tutors confirm, then either can call
-        lessonmapping[lessonAddress].lessonConfirmed = true; /// changes the state variable to true
+        lessonmapping[lessonAddress].lessonStatus = Status.Closed; /// changes the state variable to true
         emit lessonLogConfirmed(lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress);
         transferFunds(lessonAddress); ///autotransfers the funds to the tutor's account
         }
@@ -244,22 +252,22 @@
     /// @notice tranfers funds between students and tutors after the lesson
     /// @return returns bool to confirm that the transfer has occurred
     function transferFunds(bytes32 lesson) public payable checkIfPaused() returns (bool) {
-        require(lessonmapping[lesson].lessonConfirmed == true, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
+        require(lessonmapping[lesson].lessonStatus == Status.Scheduled, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
         require((lessonmapping[lesson].student == msg.sender || lessonmapping[lesson].tutor == msg.sender), "It looks like you're neither the student or teacher."); ///requires the person calling is the student or tutor
         uint tutorAmt = lessonmapping[lesson].tutorstake; ///sets the tutor amount for 
         lessonmapping[lesson].studentstake = 0; ///sets the stake amount to 0
         lessonmapping[lesson].tutorstake = 0; ///sets the stake amount to 0
         uint tutorDeposit =  (tutorAmt * 125) /100;
         sellers[lessonmapping[lesson].tutor].sellerFunds += tutorDeposit; /// reconciles the stakes and adds it back to the tutor's balance (their stake plus student stake (1 hour)
-        lessonmapping[lesson].lessonConfirmed = false; ///flips the switch so it can't be called again.
+        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
         return true; /// returns true to represent that the transfer has occured
         emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
     }  
 
     /// @notice see the info about the lesson
     /// @return the addresses of all of the lessons in total
-    function getLessonInfo (bytes32 lessonAddress) public view returns (address, address, bytes32, uint, uint, bool) {
-        return (lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress, lessonmapping[lessonAddress].studentstake, lessonmapping[lessonAddress].tutorstake, lessonmapping[lessonAddress].lessonConfirmed); 
+    function getLessonInfo (bytes32 lessonAddress) public view returns (address, address, bytes32, uint, uint, Status) {
+        return (lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress, lessonmapping[lessonAddress].studentstake, lessonmapping[lessonAddress].tutorstake, lessonmapping[lessonAddress].lessonStatus); 
     }
 
     /// @notice allows us to pull the teacher's information from the blockchain
