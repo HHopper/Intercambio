@@ -153,7 +153,7 @@
     }
     /// @notice allows the students to withdraw their funds 
     /// @dev withdrawl amount is, by default, wei
-    function studentWithdrawTotalFunds(uint Amount) public stopIntOverflow(Amount) {
+    function studentWithdrawTotalFunds(uint Amount) public payable stopIntOverflow(Amount) {
         require(msg.sender == buyers[msg.sender].buyerAddress && buyers[msg.sender].buyerFunds >= Amount);
         buyers[msg.sender].buyerFunds -= Amount;
         msg.sender.transfer(Amount);
@@ -162,7 +162,7 @@
 
     /// @notice allows the tutor to withdraw their funds    
     /// @dev all amounts are, by defaul, wei
-    function tutorWithdrawFunds(uint Amount) public stopIntOverflow(Amount) {
+    function tutorWithdrawFunds(uint Amount) public payable stopIntOverflow(Amount) {
         require(msg.sender == sellers[msg.sender].sellerAddress && sellers[msg.sender].sellerFunds >= Amount);
         sellers[msg.sender].sellerFunds -= Amount;
         msg.sender.transfer(Amount);
@@ -238,12 +238,12 @@
         require(lessonmapping[lessonAddress].lessonStatus != Status.Closed); 
         //if it is more than a month after the scheduled lesson time, confirm it as true, if not, require both tutor and student to confirm
         if(now > lessonmapping[lessonAddress].time + 2700000) { /// if now is greater than the schedule time + 30 days (in seconds) autoconfirm the lesson happened
-            lessonmapping[lessonAddress].lessonStatus = Status.Closed;
+            lessonmapping[lessonAddress].lessonStatus = Status.Scheduled;
             emit lessonLogConfirmed(lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress);
             transferFunds(lessonAddress); ///autotransfers the funds to the tutor's account
         } else {
         require (lessonmapping[lessonAddress].studentconfirmed == true && lessonmapping[lessonAddress].tutorconfirmed == true); ///requires both student and tutors confirm, then either can call
-        lessonmapping[lessonAddress].lessonStatus = Status.Closed; /// changes the state variable to true
+        lessonmapping[lessonAddress].lessonStatus = Status.Scheduled; /// changes the state variable to true
         emit lessonLogConfirmed(lessonmapping[lessonAddress].tutor, lessonmapping[lessonAddress].student, lessonAddress);
         transferFunds(lessonAddress); ///autotransfers the funds to the tutor's account
         }
@@ -257,9 +257,9 @@
         uint tutorAmt = lessonmapping[lesson].tutorstake; ///sets the tutor amount for 
         lessonmapping[lesson].studentstake = 0; ///sets the stake amount to 0
         lessonmapping[lesson].tutorstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
         uint tutorDeposit =  (tutorAmt * 125) /100;
         sellers[lessonmapping[lesson].tutor].sellerFunds += tutorDeposit; /// reconciles the stakes and adds it back to the tutor's balance (their stake plus student stake (1 hour)
-        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
         return true; /// returns true to represent that the transfer has occured
         emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
     }  
