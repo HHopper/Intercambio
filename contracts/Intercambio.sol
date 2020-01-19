@@ -86,8 +86,9 @@
     }
 
     /// @notice used to prevent integer overflow where users can input
+    /// @dev notice the number. It's the current exchange rate of 100 dollars an hour
     modifier stopIntOverflow(uint input) {
-        require(input < 10000000000000 && input > 0); 
+        require(input < 1568026973464049984 && input > 0); 
         _;
     }
 
@@ -99,6 +100,12 @@
             _; 
         }
     }
+
+    modifier allowed(bytes32 lesson) {
+                if(now > lessonmapping[lesson].time + 30){
+                        _;
+                }
+        }
 
     /// @notice constructor that sets the market information
     /// @dev assigns a market owner who has the ability to flip the circuit breaker 
@@ -120,6 +127,7 @@
     /// @notice creates a tutor with a series of attributes
     /// @dev the unit conversions for setRate are in wei by default 
     function createTutor(uint setRate) payable public stopIntOverflow(setRate) {
+        require(msg.value > setRate, "You have to deposit at least an hours worth of stake.");
         require(sellers[msg.sender].existance != true, "There is already a tutor at this address."); /// makes sure the person doesn't already have an account
         Intercambio.Seller storage tutor = sellers[msg.sender]; 
         tutor.sellerAddress = msg.sender;
@@ -234,7 +242,7 @@
     }
 
     /// @notice confirms that the lesson has been confirmed prior to transfer
-    function lessonConfirmed (bytes32 lessonAddress) internal {
+    function lessonConfirmed (bytes32 lessonAddress) allowed(lessonAddress) internal {
         require(lessonmapping[lessonAddress].lessonStatus != Status.Closed); 
         //if it is more than a month after the scheduled lesson time, confirm it as true, if not, require both tutor and student to confirm
         if(now > lessonmapping[lessonAddress].time + 2700000) { /// if now is greater than the schedule time + 30 days (in seconds) autoconfirm the lesson happened
@@ -310,6 +318,9 @@
     function getCircuitBreakerInfo() public view returns (bool) {
         return contractPaused;
     }
+
+
+
 
     }
 
