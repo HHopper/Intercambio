@@ -216,7 +216,7 @@
 
     /// @notice this function allows tutors to confirm the lesson 
     /// @dev this, and the tutor conifirmation, are the two functions used to enable transferFunds()
-    function tutorConfirmLesson (bytes32 lessonAddress) public returns (bool) { 
+    function tutorConfirmLesson (bytes32 lessonAddress) public allowed(lessonAddress) returns (bool) { 
         require(lessonmapping[lessonAddress].tutor == msg.sender, "You are not the tutor."); ///requires the tutor confirming to be the tutor
         lessonmapping[lessonAddress].tutorconfirmed = true; /// changes the state variable to true
         ///if the tutor has also confirmed it, call lessonConfirmed
@@ -230,7 +230,7 @@
         }
     }
     /// @notice this function allows students to confirm the lesson
-    function studentConfirmLesson (bytes32 lessonAddress) public returns (bool) { 
+    function studentConfirmLesson (bytes32 lessonAddress) public allowed (lessonAddress) returns (bool) { 
         require(lessonmapping[lessonAddress].student == msg.sender, "You are not the student of this lesson.");     ///requires the student confirming to be the student
         lessonmapping[lessonAddress].studentconfirmed = true;
         emit studentConfirmedLesson(msg.sender); ///lets the front end know the student has confirmed the lesson
