@@ -101,11 +101,13 @@
         }
     }
 
+    /// @notice ensures that whatever function is called is called 60 seconds after it is scheduled
     modifier allowed(bytes32 lesson) {
-                if(now > lessonmapping[lesson].time + 30){
+                if(now > lessonmapping[lesson].time + 60){
                         _;
                 }
         }
+
 
     /// @notice constructor that sets the market information
     /// @dev assigns a market owner who has the ability to flip the circuit breaker 
@@ -164,7 +166,8 @@
     function studentWithdrawTotalFunds(uint Amount) public payable stopIntOverflow(Amount) {
         require(msg.sender == buyers[msg.sender].buyerAddress && buyers[msg.sender].buyerFunds >= Amount);
         buyers[msg.sender].buyerFunds -= Amount;
-        msg.sender.transfer(Amount);
+        (bool success, ) = msg.sender.call.value(Amount)("");
+        require(success, "Transfer failed.");
         emit studentFundsWithdrawn(msg.sender, Amount);
         }
 
@@ -173,11 +176,12 @@
     function tutorWithdrawFunds(uint Amount) public payable stopIntOverflow(Amount) {
         require(msg.sender == sellers[msg.sender].sellerAddress && sellers[msg.sender].sellerFunds >= Amount);
         sellers[msg.sender].sellerFunds -= Amount;
-        msg.sender.transfer(Amount);
+        (bool success, ) = msg.sender.call.value(Amount)("");
+        require(success, "Transfer failed.");
         emit tutorFundsWithdrawn(msg.sender, Amount);
     }
 
-    /// @notice this function schedules a lesson and then it also stakes fundstr
+    /// @notice this function schedules a lesson and then it also trustakes fundstr
     /// @dev notice the the keccak function to create a unique lesson ID. This can be improved.
     function scheduleLesson(address tutor) public payable returns(bytes32, uint) { 
         require((buyers[msg.sender].started == true && tutor != msg.sender && sellers[tutor].sellerFunds > sellers[tutor].hourlyRate), "It seems that either you don't have an account, you ACTUALLY ARE THE TUTOR - SAVEY?, or your tutor doesn't have the required stake amount."); ///require the tutor and student both exist and they aren't the same
@@ -319,8 +323,7 @@
         return contractPaused;
     }
 
-
-
+    function () external {}
 
     }
 
