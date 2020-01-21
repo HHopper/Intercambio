@@ -1,6 +1,14 @@
 var Intercambio = artifacts.require("Intercambio");
 
 contract('Intercambio', function () {
+    
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
+    
     it('should have a contract balance of zero', async function () {
         
         let instance = await Intercambio.deployed();
@@ -23,6 +31,14 @@ contract('Intercambio', function () {
 
 
 contract('Intercambio', function () {
+    
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
+
     it('should allow a tutor to create and fund an account', function () {
         //setup
         //start instance of contract
@@ -43,6 +59,13 @@ contract('Intercambio', function () {
 
 
 contract('Intercambio', function () {
+
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
 
     it('should allow a student to create and fund an account', function () {
         //setup
@@ -65,6 +88,13 @@ contract('Intercambio', function () {
 
 contract('Intercambio', function () {
 
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
+
     it('should let a tutor withdraw funds', function () {
         // setup
         // start instance of contract
@@ -83,6 +113,13 @@ contract('Intercambio', function () {
 
 
 contract('Intercambio', function () {
+
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
 
     it('should let a student withdraw funds', function () {
         //setup
@@ -103,6 +140,12 @@ contract('Intercambio', function () {
 
 contract('Intercambio', function () {
 
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
 
     it('should allow a student to schedule a lesson', function () {
         // setup
@@ -121,6 +164,13 @@ contract('Intercambio', function () {
 
 
 contract('Intercambio', function () {
+
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
 
     it('should pull funds from both the students and tutors accounts after scheduling', function () {
         //setup
@@ -142,6 +192,13 @@ contract('Intercambio', function () {
 
 contract('Intercambio', function () {
 
+    before(function() {
+         // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
+
     it('should allow a tutor to confirm the lesson', function () {
         //setup
         
@@ -157,6 +214,12 @@ contract('Intercambio', function () {
 
 contract('Intercambio', function () {
 
+    before(function() {
+        // runs before all tests in this block
+        // create an instance of the contract
+        // prefund student account with 10 eth
+        // prefund tutor account with 10 eth
+      });
 
     it('should confirm the lesson and transfer funds', function () {
         //setup
