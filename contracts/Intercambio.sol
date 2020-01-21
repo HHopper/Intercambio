@@ -3,7 +3,7 @@
     /// @title A decentralized language exchange application
     /// @author Huckleberry J. Hopper
     /// @notice Creates and handles tutor and student accounts/funds, stakes funds, and confirms lesson logic for fund transfer
-    /// @dev All functions calls are handled locally and this is not production ready
+    /// @dev All functions calls are handled within this one contract and this is not production ready
 
     contract Intercambio {
 
@@ -85,7 +85,7 @@
         _;
     }
 
-    /// @notice used to prevent integer overflow where users can input
+    /// @notice used to prevent integer overflow where users can infput
     /// @dev notice the number. It's the current exchange rate of 100 dollars an hour
     modifier stopIntOverflow(uint input) {
         require(input < 1568026973464049984 && input > 0); 
