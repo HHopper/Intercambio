@@ -142,7 +142,7 @@
 
     /// @notice creates a language learner with a series of attributes
     /// @dev notice the bool value line 135 - this is used for reference when scheduling lesson
-    function createStudent() payable public returns (address) {
+    function createStudent() payable public returns (uint) {
         require(buyers[msg.sender].started != true, "There is already a student at this address."); ///checks to see if there is already a student at this address
         Intercambio.Buyer storage student = buyers[msg.sender]; ///creates and instance of student and assigned _address to mapping
         student.buyerAddress = msg.sender; ///assigns address to struct
@@ -150,6 +150,7 @@
         student.started = true; ///assigns bool to true to prove for later reference
         buyerAddressesArray.push(msg.sender); ///adds the new address to the student addresses array
         emit studentAccountCreated(msg.sender, msg.value); ///tells the front end a new student has been created
+        return student.buyerFunds;
 
     }
 
@@ -323,7 +324,7 @@
         return contractPaused;
     }
 
-    function () external {}
+    function () external {revert();}
 
     }
 
