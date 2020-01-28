@@ -1,6 +1,6 @@
 The Intercambio contract has been deployed to Rinkeby. 
 The contract address is 0xdCf7a3C5827d7a04052B896C21987629f747ec50
 
-https://rinkeby.etherscan.io/address/0xdcf7a3c5827d7a04052b896c21987629f747ec50
+https://rinkeby.etherscan.io/address/0xdCf7a3C5827d7a04052B896C21987629f747ec50#code
 
 
