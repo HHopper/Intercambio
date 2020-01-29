@@ -3,4 +3,9 @@ The contract address is 0xdCf7a3C5827d7a04052B896C21987629f747ec50
 
 https://rinkeby.etherscan.io/address/0xdCf7a3C5827d7a04052B896C21987629f747ec50#code
 
+You can also interact with with it at this URL:
+
+https://oneclickdapp.com/korea-degree/
+
+
 
