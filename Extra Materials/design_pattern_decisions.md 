@@ -1,0 +1,153 @@
+design_pattern_decisions.md 
+
+Design Patterns That Are Used
+
+    1. Fail Early and Fail Loud
+
+Code Snippet:
+
+    function transferFunds(bytes32 lesson) public payable checkIfPaused() returns (bool) {
+        require(lessonmapping[lesson].lessonStatus == Status.Scheduled, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
+        require((lessonmapping[lesson].student == msg.sender || lessonmapping[lesson].tutor == msg.sender), "It looks like you're neither the student or teacher."); ///requires the person calling is the student or tutor
+        uint tutorAmt = lessonmapping[lesson].tutorstake; ///sets the tutor amount for 
+        lessonmapping[lesson].studentstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].tutorstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
+        uint tutorDeposit =  (tutorAmt * 125) /100;
+        sellers[lessonmapping[lesson].tutor].sellerFunds += tutorDeposit; /// reconciles the stakes and adds it back to the tutor's balance (their stake plus student stake (1 hour)
+        return true; /// returns true to represent that the transfer has occured
+        emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
+    }  
+
+How: The above example highlights one of the key functions that uses this design principle. This design pattern is primarily used in the form of modifiers and in the form of require statements
+throughout the functions. This applications contains six modifiers used through that primarily are used to short-circuit the code when some condition is not met. The require statements operate 
+in much the same way
+   
+Why: The primary reasons for using this design pattern are two fold. First, it is used to control what users can do what. For example, in the code above (line 14) the require state ensures that only 
+the student or the tutor can actually call the transfer function (which is itself called within another function). The second reason, which almost goes without saying, is to stop unnecessary execution
+of code. To that end, nearly all of the require statment can be found at the top of each function.
+   
+   
+    2. Pull Over Push Payments
+
+Code Snippet:
+
+    function transferFunds(bytes32 lesson) public payable checkIfPaused() returns (bool) {
+        require(lessonmapping[lesson].lessonStatus == Status.Scheduled, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
+        require((lessonmapping[lesson].student == msg.sender || lessonmapping[lesson].tutor == msg.sender), "It looks like you're neither the student or teacher."); ///requires the person calling is the student or tutor
+        uint tutorAmt = lessonmapping[lesson].tutorstake; ///sets the tutor amount for 
+        lessonmapping[lesson].studentstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].tutorstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
+        uint tutorDeposit =  (tutorAmt * 125) /100;
+        sellers[lessonmapping[lesson].tutor].sellerFunds += tutorDeposit; /// reconciles the stakes and adds it back to the tutor's balance (their stake plus student stake (1 hour)
+        return true; /// returns true to represent that the transfer has occured
+        emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
+    }
+
+How: The reader will notice that in this example the withdrawal pattern is used by hhandling the amount of accounting of the lesson prior to transfering funds from the student to the teachers.
+The same logic is followed regarding the functions studentWithdrawTotalFunds() and tutorWithdrawFunds(). One will also notice that in the transfer funds function, the stake amount is finite and the 
+enum Status prevents re-entry. Together, it provides a reasonable defense in addition to the checkIfPaused() modifier.
+
+Why: The withdrawn pattern is primarily used to prevent rentrancy attacks in conjunction with other security tools. To that end, another additional security feature is the separation of 
+functions in the context of fund managment. For example at the end of lesson transfer the funds are transfered to the tutor's account inside the program, not to external wallet accounts.
+In this self-contained manner, additional layers of security (separted by the security of each function) should provide ample protection.
+
+    3. Circuit Breaker
+    
+    function circuitPauseAllFundMovement() public onlyOwner() { // onlyOwner can call
+        if (contractPaused == false) { contractPaused = true; }
+        else { contractPaused = false; }
+    }
+
+    modifier checkIfPaused() {
+        require(contractPaused == false);
+        _;
+    }
+
+    function fundStudentAccount () public payable checkIfPaused() returns (bool) {
+
+
+
+How: The circuit breaker design patter is used with the modifier checkIfPaused() to stop the movement of funds given that some of malicious code has executed. Of course, the only the owner of the market
+can actually call this function and subsequent function. You will find this function and its susequent insertions as a modifier throughout the code.
+
+Why: The primary reason behind using this design pattern is to add in a back-door function that stops the movement of funds during malicious attacks. For example, suppose a malicious user breaks transferFunds()
+and is able to attack it with a rentrancy function of sorts. In this manner, the owner of the market could call the circuit breaker and immediately stop the movement of all funds across 
+the application.
+
+    4. Speed Bump
+
+        modifier allowed(bytes32 lesson) {
+                if(now > lessonmapping[lesson].time + 30){
+                        _;
+                }
+        }
+
+How: The speed bump design pattern is primarily used as a modifier (shown above) and is implemented in a variety of function surrounding lesson scheduling and miner manipulation.
+
+Why: This modifier is primarily used as a defense again miner block manipulation. The modifer itself ensures that now (line 67) occurs more than 30 seconds after the time of the lesson scheduling. 
+In this way, it would be difficult for miners to manipulate lesson logic via block confrimation time. And, combined with the circuit breaker design pattern, adds in extra defense against fund manipulation from external users.
+
+
+    5. State Machine
+
+enum Status { Scheduled, Closed }
+
+function transferFunds(bytes32 lesson) public payable checkIfPaused() returns (bool) {
+        require(lessonmapping[lesson].lessonStatus == Status.Scheduled, "Either the lesson has not been confirmed or you're trying to steal money."); ///requires lesson is confirmed (and switch hasn't been flipped)
+        require((lessonmapping[lesson].student == msg.sender || lessonmapping[lesson].tutor == msg.sender), "It looks like you're neither the student or teacher."); ///requires the person calling is the student or tutor
+        uint tutorAmt = lessonmapping[lesson].tutorstake; ///sets the tutor amount for 
+        lessonmapping[lesson].studentstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].tutorstake = 0; ///sets the stake amount to 0
+        lessonmapping[lesson].lessonStatus = Status.Closed; ///flips the switch so it can't be called again.
+        uint tutorDeposit =  (tutorAmt * 125) /100;
+        sellers[lessonmapping[lesson].tutor].sellerFunds += tutorDeposit; /// reconciles the stakes and adds it back to the tutor's balance (their stake plus student stake (1 hour)
+        return true; /// returns true to represent that the transfer has occured
+        emit transferCompleted(lessonmapping[lesson].tutor, lessonmapping[lesson].student, tutorDeposit, lesson);
+    }
+
+
+How:  While every change in general state can be considered a state-machine the primary design pattern that was chosen involved the use of the enum Status to manage the current state of the lesson 
+logic between students and tutors. The enum is used primarily to control which functions can be called and when. For example transferFunds() should not be able to be called prior to the lesson actually
+being scheduled and confirmed. In this way, the state machine design (beyond fund management) pattern for lesson managment can be broken down into three distinct phases: scheduled, confirmed, closed.
+The enum only has two sub-types: schedules and closed. With each state of the Status enum, the smart contract only allows users to call certain functions. 
+
+Why: The state machine design pattern is used to ensure that the accurate user flow follows the business logic intended. For example, it wouldn't make sense for a student to transfer funds to a tutor
+prior to the lesson being scheduled. So transferFunds() is not accessable until the status of the lesson is scheduled and both users confirmed it happened. 
+
+     6. Restricting Access
+
+Code Snippet:
+
+    modifier onlyOwner() {
+        require(msg.sender == mktOwner); { _;} 
+    }
+
+How: The primary concern for restricting access relates to the control of the general market and the transferability of funds. In this way, the restricted access design pattern was used
+with the market owner as the only user with restricted access in highly-specific ways. If the market is compromised, the market owner can pause all transactions and (unfortunately) 
+destroy the contract if needed. 
+
+Why: One of the main properties of this market is that the tutors and students have complete control of their own funds while they are in their accounts (much like a little bank) and only 
+the lesson logic will have control of the funds when placed in escro. All information should be publically viewable and control should be modular to the users in thier respective roles. 
+
+
+Not Used
+
+    1. Auto Deprecation
+
+The auto deprecation design pattern is a useful strategy for closing contracts that should expire after a certain amount of time. This design pattern was not used because the author felt it was easier
+and safer to manage the lesson logic as a state variable rather than than by creating an external contract subject to a number of unique security risks (delegatecall, cross-rentry, etc). Additionally, 
+Intercambio.sol itself should not auto-depreciate because, well, this market should state open as long as users are using it. 
+
+Summary:
+
+Most of design patterns that were chosen to ensure the security of the funds of the users and the confirmation of lesson logic between tutors and students. 
+As such, an effort was made to ensure the that malicious users couldn’t (a) manipulate the funds of either students or tutors unless they were the designated 
+users and (b) manipulate funds while they are in transfer between users. In this way, this single contract (Intercambio.sol) can be thought of as a state machine 
+that funds as a bank and as an escro provider for lesson logic between users. As language learning is not typically a private matter (as opposed to voting 
+applications and others), the design focus was primarily that of securing funds and minimizing user interaction during the contract itself. In many ways, the 
+contract is itself just a large state machine. It’s important to note here that this design decision was included in such a way that it could minimize the
+dangers of untrusted contracts and the risks associated with inter-contract execution and reliance.What’s more, it is important to note that this application 
+and contract contain no for-loops or other actions that could be vulnerable to attacks from other users. Of course, that’s not to say that there aren’t bugs 
+to be exploited but for the sake of a first edition (and this is definitely a first edition) these were the main considerations. 

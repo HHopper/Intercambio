@@ -52,5 +52,4 @@ In a denial of service attack an attacker will attempt to call a revert function
 
 The denial of service by block gas limit attack becomes possible during situations in which a contract loops over array of an undetermined size. With this in mind, there are no loops found within this contract. As is similar to the denial of service attack above, the transaction logic is simple, contains a number of circuit breakers throughout each, and are limited to one transaction at a time. 
      
-   6. Force Sending Ether
 
