@@ -69,7 +69,7 @@ https://oneclickdapp.com/sponsor-baron/
 
 This version is certaintly much more attractive than the front end I am capable of producing as of now. 
 
-# Where to Find Requirement Related Information
+## Where to Find Requirement Related Information
 
 Circuit Breaker Pattern: Intercambio.sol line 82 and 124
 
