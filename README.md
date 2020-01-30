@@ -1,4 +1,5 @@
-# Intercambio
+[](https://miro.medium.com/max/625/1*rkPLXetDLakX-7acRw4mtQ.png)
+
 Intercambio is a language exchange ddapp that is intended to create a marketplace for language learners and language tutors to connect and exchange funds.
 
 # About the project
