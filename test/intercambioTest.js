@@ -248,6 +248,43 @@ contract('Intercambio', function (accounts) {
         assert.equal(result ,expected);
 
     });
+
+     ///@dev this test makes sure the students can actually create and fund accounts. It's the foundation of the escro functionality later on.
+     it('when called by the owner the circuit breaker should stop all fund movement', async () => {
+        //setup
+        const intercambioInstance = await Intercambio.deployed({from : accounts[0]}); // account 0 creates an instance
+        deployer = accounts[0]; // account zero is the deployer
+        studentAccount = accounts[8]; // account 1 is the first student (used for set-up)
+        var studentBalance = 10000; // sets the student balance
+        tutorAccount = accounts[2]; // account 2 is the first tutor (used for set-up)
+        var tutorBalance = 10000; // tutor balance (used for set-up)
+
+
+
+        // call the createTutor function 
+        await intercambioInstance.createStudent({from: studentAccount, value: 1000}); // calls the method  .createstudent and funds account with 1000 wei
+        await intercambioInstance.circuitPauseAllFundMovement({from: deployer});
+        let result = await intercambioInstance.getCircuitBreakerInfo();
+        expected = true;
+
+        try {
+
+            await intercambioInstance.fundStudentAccount({from : studentAccount, value: 1});
+          }
+          catch(error) {
+            
+            result2 = "No, definitely not.";
+            // expected output: ReferenceError: nonExistentFunction is not defined
+            // Note - error messages will vary depending on browser
+          }
+
+          expected2 = "No, definitely not.";
+        
+        //verification
+        assert.equal(result, true, "the circuit breaker is no longer switching");
+        assert.equal(result2, expected2);
+    });
+
 });
 
 
