@@ -1,0 +1,13 @@
+The Intercambio contract has been deployed to Rinkeby. 
+The contract address is 0x55538fb95c05ea17d82ef27d3bbc6afa294db372
+
+https://rinkeby.etherscan.io/tx/0xde16efa2846d2edaaf704de27d0387f99f46e4f6de1f39ccdc25249d3cca6a21
+
+You can also interact with with it at this URL:
+
+https://oneclickdapp.com/sponsor-baron/
+
+This is kindly provided by one-click ddapp. It's an excellent test UI for development. 
+
+
+
