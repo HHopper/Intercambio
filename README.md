@@ -1,4 +1,4 @@
-![Logo Image] (https://lh3.googleusercontent.com/YwtafhMacOXx8tQVNpRPdcSRqUPRPh-rim28LXSy1smxd_NgJ6YAHbzqvUjUgR9OE_K23hg=s85)
+![Logo Image] (https://miro.medium.com/max/625/1*rkPLXetDLakX-7acRw4mtQ.png)
 
 Intercambio is a language exchange ddapp that is intended to create a marketplace for language learners and language tutors to connect and exchange funds.
 
