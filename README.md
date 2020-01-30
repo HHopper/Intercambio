@@ -10,7 +10,7 @@ Like many other language exchange applications on the market, this product facil
 
 In traditional marketplaces companies tend to extract value in the form of commissions often taken at the time of the occurance of the lesson or upon removal of the funds - frontloading the cost to the tutors themselves. For many such tutors, especially those in deprived areas, a normal commission of 15% for language has a significant impact upon their individual livelihood. This is the primary motivation of Intercambio. 
 
-Medium Post: https://medium.com/@huckleberry.ak.hopper/intercambio-a-ethereum-application-for-language-exchange-b2ab858845a8)
+[Medium Post] (https://medium.com/@huckleberry.ak.hopper/intercambio-a-ethereum-application-for-language-exchange-b2ab858845a8) 
 
 In this way, this project is intended simply to facilitate the exact same processes of traditional language tutoring services without the rent-extraction that has become so common in client-server business models around the world.
 
@@ -38,22 +38,22 @@ Also, make sure you have metamsk installed on your local machine that you're def
 
 # How to Comb Through This Project Effeciently
 
-When you download this file and open it up in the Visual Studio (which is what I'm assuming you're using as your coding environment). I've tried to document the application logic as thoroughly as possible so you don't have to go digging around guessing what everything does. In the top directory you will find a folder called Assignment Extras. Within this you will find my avoiding_commmon_attacks, design_pattern_decisions, and a brief library demonstration as well. My project didn't need a library so I added a brief demo. 
+When you download this file and open it up in the Visual Studio (which is what I'm assuming you're using as your coding environment). I've tried to document the application logic as thoroughly as possible so you don't have to go digging around guessing what everything does. In the top directory you will find a folder called Assignment Extras. Within this you will find my ***avoiding_commmon_attacks, design_pattern_decisions, and a brief library demonstration as well.*** My project didn't need a library so I added a brief demo. 
 
 Beneath that are all of the standard things you would expect from a truffle project. 
 
 Upon opening this project please do the following steps: 
 
-Step 1:Run the ganache-cli blockchain. The port is 8545. 
+**Step 1:** Run the ganache-cli blockchain. The port is 8545. 
 
-Step 2: truffle compile
+**Step 2:** truffle compile
 
-Step 2: truffle migrate
+**Step 2:** truffle migrate
 
-Step 4: truffle test
+**Step 4:**  truffle test
 You will note that there are ten total tests thus far. I decided it was better to test the key functionality in this way because the instantiated contract contains rather complex business logic within. 
 
-Step 5: initialize the front end with the following command
+**Step 5:** initialize the front end with the following command
 
 < Insert Command Here >
 
