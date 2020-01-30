@@ -31,9 +31,9 @@ I hope you enjoy playing around with it as much as I did making it.
 
 Assuming you are using a Linux Ubuntu set-up, you will need the truffle suite as well as the Ganache-cli development blockchain. Following the traditional command line, type: 
 
-    $ npm install -g ganache-cli
-
     $ npm install -g truffle
+    $ npm install -g ganache-cli
+    $ npm install
 
 Also, make sure you have metamsk installed on your local machine that you're definitely not using the Brave Browser. Both Firefox and Chrome work fine for the take of this very modest first go at a Dapp. 
 
