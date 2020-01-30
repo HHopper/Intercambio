@@ -31,15 +31,15 @@ I hope you enjoy playing around with it as much as I did making it.
 
 Assuming you are using a Linux Ubuntu set-up, you will need the truffle suite as well as the Ganache-cli development blockchain. Following the traditional command line, type: 
 
-$ npm install -g ganache-cli
+    $ npm install -g ganache-cli
 
-$ npm install -g truffle
+    $ npm install -g truffle
 
 Also, make sure you have metamsk installed on your local machine that you're definitely not using the Brave Browser. Both Firefox and Chrome work fine for the take of this very modest first go at a Dapp. 
 
 # How to Comb Through This Project Effeciently
 
-When you download this file and open it up in the Visual Studio (which is what I'm assuming you're using as your coding environment). I've tried to document the application logic as thoroughly as possible so you don't have to go digging around guessing what everything does. In the top directory you will find a folder called Assignment Extras. Within this you will find my ***avoiding_commmon_attacks, design_pattern_decisions, and a brief library demonstration as well.*** My project didn't need a library so I added a brief demo. 
+When you download this file and open it up in the Visual Studio (which is what I'm assuming you're using as your coding environment). I've tried to document the application logic as thoroughly as possible so you don't have to go digging around guessing what everything does. In the top directory you will find a folder called Assignment Extras. Within this you will find my ***avoiding_common_attacks, design_pattern_decisions, and a brief library demonstration as well.*** My project didn't need a library so I added a brief demo. 
 
 Beneath that are all of the standard things you would expect from a truffle project. 
 
@@ -47,11 +47,14 @@ Upon opening this project please do the following steps:
 
 **Step 1:** Run the ganache-cli blockchain. The port is 8545. 
 
-**Step 2:** truffle compile
+**Step 2:** 
+      truffle compile
 
-**Step 2:** truffle migrate
+**Step 2:** 
+      truffle migrate
 
-**Step 4:**  truffle test
+**Step 4:**  
+      truffle test
 You will note that there are ten total tests thus far. I decided it was better to test the key functionality in this way because the instantiated contract contains rather complex business logic within. 
 
 **Step 5:** initialize the front end with the following command
